@@ -1,0 +1,23 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+/app/api/app
+
+# Output
+*.out
+
+# Git
+.git
+.gitignore
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/editor
+.vscode
+.idea
+*.swp 
