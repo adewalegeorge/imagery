@@ -14,7 +14,7 @@ Perfect for use in web apps, CMS, and image-heavy sites.
 - Fast and efficient (libvips under the hood)
 
 ## Requirements
-- Go 1.16+
+- Go 1.24+
 - [libvips](https://libvips.github.io/libvips/) and [pkg-config](https://www.freedesktop.org/wiki/Software/pkg-config/) installed on your system
 
 ## Getting Started
@@ -23,12 +23,16 @@ Perfect for use in web apps, CMS, and image-heavy sites.
    ```sh
    brew install pkg-config vips  # macOS
    # or use your system's package manager for Linux
+
+   # Make sure you have Go 1.24 or higher:
+   go version
    ```
 2. **Clone the repo and run:**
    ```sh
    git clone <your-repo-url>
    cd imagery
    go run api/main.go
+   # (Requires Go 1.24+)
    ```
 
 ## Usage
@@ -66,7 +70,7 @@ This fetches the image, resizes to 400px width, applies a blur with sigma 2.5, a
 
 ## Deploying to the Cloud
 
-You can deploy this API to platforms like Render, Fly.io, DigitalOcean, or Google Cloud Run. Make sure to install `libvips` and `pkg-config` in your deployment environment (see Dockerfile example in the repo).
+You can deploy this API to platforms like Render, Fly.io, DigitalOcean, or Google Cloud Run. Make sure to install `libvips` and `pkg-config` in your deployment environment (see Dockerfile example in the repo). The Dockerfile uses Go 1.24+ to match the project requirements.
 
 ## License
 
