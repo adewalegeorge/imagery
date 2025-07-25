@@ -19,6 +19,8 @@ func main() {
 		heightStr := c.Query("h")             // height:Integer (optional)
 		crop := c.DefaultQuery("c", "false")  // crop:Boolean (true, false)
 		format := c.DefaultQuery("f", "auto") // format:String (jpeg, png, webp, avif)
+		blurStr := c.DefaultQuery("b", "0")   // blur:Float (optional)
+		gray := c.DefaultQuery("g", "false")  // gray:Boolean (optional)
 
 		if imageURL == "" || widthStr == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "url and w (width) are required"})
@@ -41,6 +43,16 @@ func main() {
 			height = h
 		}
 
+		blur := 0.0
+		if blurStr != "" {
+			b, err := strconv.ParseFloat(blurStr, 64)
+			if err != nil || b < 0 {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid blur value"})
+				return
+			}
+			blur = b
+		}
+
 		resp, err := http.Get(imageURL)
 		if err != nil || resp.StatusCode != 200 {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "failed to fetch image"})
@@ -54,10 +66,17 @@ func main() {
 		}
 
 		options := bimg.Options{
-			Width:   width,
-			Height:  height, // 0 means proportional scaling
-			Crop:    crop == "true",
-			Quality: 85,
+			Width:        width,
+			Height:       height, // 0 means proportional scaling
+			Crop:         crop == "true",
+			Quality:      85,
+			GaussianBlur: bimg.GaussianBlur{Sigma: blur},
+			Interpretation: func() bimg.Interpretation {
+				if gray == "true" {
+					return bimg.InterpretationBW
+				}
+				return bimg.InterpretationSRGB
+			}(),
 		}
 
 		// Auto format selection

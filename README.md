@@ -28,7 +28,7 @@ Perfect for use in web apps, CMS, and image-heavy sites.
    ```sh
    git clone <your-repo-url>
    cd imagery
-   go run main.go
+   go run api/main.go
    ```
 
 ## Usage
@@ -40,6 +40,8 @@ Send a GET request to `/api/res` with the following query parameters:
 - `h` (optional): Height in pixels (if omitted, height is scaled automatically)
 - `c` (optional): Crop (`true` or `false`, default: `false`)
 - `f` (optional): Output format (`jpeg`, `png`, `webp`, `avif`, or `auto`, default: `auto`)
+- `b` (optional): Blur amount (float, e.g., 1.5)
+- `g` (optional): Grayscale (`true` or `false`)
 
 ### Example Request
 
@@ -53,6 +55,14 @@ curl "http://localhost:8080/api/res?url=https://example.com/image.jpg&w=300&h=20
 ```
 curl "http://localhost:8080/api/res?url=https://example.com/image.jpg&w=400" --output resized.jpg
 ```
+
+### Example: Blur and Grayscale
+
+```
+curl "http://localhost:8080/api/res?url=https://example.com/image.jpg&w=400&b=2.5&g=true" --output blurred-gray.jpg
+```
+
+This fetches the image, resizes to 400px width, applies a blur with sigma 2.5, and converts it to grayscale.
 
 ## Deploying to the Cloud
 
