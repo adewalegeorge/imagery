@@ -3,33 +3,47 @@ package main
 import (
 	"io"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/h2non/bimg"
 )
 
 func main() {
-	r := gin.Default()
-	r.SetTrustedProxies(nil)
+	server := gin.Default()
+	server.SetTrustedProxies(nil)
 
-	r.GET("/api/res", func(c *gin.Context) {
-		imageURL := c.Query("url")            // url:String
-		widthStr := c.Query("w")              // width:Integer
-		heightStr := c.Query("h")             // height:Integer (optional)
-		crop := c.DefaultQuery("c", "false")  // crop:Boolean (true, false)
-		format := c.DefaultQuery("f", "auto") // format:String (jpeg, png, webp, avif)
-		blurStr := c.DefaultQuery("b", "0")   // blur:Float (optional)
-		gray := c.DefaultQuery("g", "false")  // gray:Boolean (optional)
+	server.GET("/api/opt", func(reqRes *gin.Context) {
+		rel := reqRes.Query("rel") // relative path in bucket
+		abs := reqRes.Query("abs") // absolute URL
+		var imageURL string
+		if rel != "" {
+			bucketHost := os.Getenv("BUCKET_HOST")
+			imageURL = strings.TrimRight(bucketHost, "/") + "/" + strings.TrimLeft(rel, "/")
+		} else if abs != "" {
+			imageURL = abs
+		} else {
+			reqRes.JSON(http.StatusBadRequest, gin.H{"error": "rel or abs parameter required"})
+			return
+		}
+
+		widthStr := reqRes.Query("w")              // width:Integer
+		heightStr := reqRes.Query("h")             // height:Integer (optional)
+		crop := reqRes.DefaultQuery("c", "false")  // crop:Boolean (true, false)
+		format := reqRes.DefaultQuery("f", "auto") // format:String (jpeg, png, webp, avif)
+		blurStr := reqRes.DefaultQuery("b", "0")   // blur:Float (optional)
+		gray := reqRes.DefaultQuery("g", "false")  // gray:Boolean (optional)
 
 		if imageURL == "" || widthStr == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "url and w (width) are required"})
+			reqRes.JSON(http.StatusBadRequest, gin.H{"error": "url and w (width) are required"})
 			return
 		}
 
 		width, err := strconv.Atoi(widthStr)
 		if err != nil || width <= 0 {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid width"})
+			reqRes.JSON(http.StatusBadRequest, gin.H{"error": "invalid width"})
 			return
 		}
 
@@ -37,7 +51,7 @@ func main() {
 		if heightStr != "" {
 			h, err := strconv.Atoi(heightStr)
 			if err != nil || h < 0 {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid height"})
+				reqRes.JSON(http.StatusBadRequest, gin.H{"error": "invalid height"})
 				return
 			}
 			height = h
@@ -47,7 +61,7 @@ func main() {
 		if blurStr != "" {
 			b, err := strconv.ParseFloat(blurStr, 64)
 			if err != nil || b < 0 {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid blur value"})
+				reqRes.JSON(http.StatusBadRequest, gin.H{"error": "invalid blur value"})
 				return
 			}
 			blur = b
@@ -55,13 +69,13 @@ func main() {
 
 		resp, err := http.Get(imageURL)
 		if err != nil || resp.StatusCode != 200 {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "failed to fetch image"})
+			reqRes.JSON(http.StatusBadRequest, gin.H{"error": "failed to fetch image"})
 			return
 		}
 		defer resp.Body.Close()
 		imgBytes, err := io.ReadAll(resp.Body)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to read image"})
+			reqRes.JSON(http.StatusInternalServerError, gin.H{"error": "failed to read image"})
 			return
 		}
 
@@ -81,7 +95,7 @@ func main() {
 
 		// Auto format selection
 		if format == "auto" {
-			accept := c.GetHeader("Accept")
+			accept := reqRes.GetHeader("Accept")
 			if accept != "" && (accept == "image/avif" || accept == "image/webp") {
 				if accept == "image/avif" {
 					options.Type = bimg.AVIF
@@ -108,7 +122,7 @@ func main() {
 
 		newImage, err := bimg.NewImage(imgBytes).Process(options)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "image processing failed"})
+			reqRes.JSON(http.StatusInternalServerError, gin.H{"error": "image processing failed"})
 			return
 		}
 
@@ -126,8 +140,8 @@ func main() {
 			contentType = "application/octet-stream"
 		}
 
-		c.Data(http.StatusOK, contentType, newImage)
+		reqRes.Data(http.StatusOK, contentType, newImage)
 	})
 
-	r.Run(":8080")
+	server.Run(":8080")
 }

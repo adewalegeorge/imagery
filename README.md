@@ -37,9 +37,10 @@ Perfect for use in web apps, CMS, and image-heavy sites.
 
 ## Usage
 
-Send a GET request to `/api/res` with the following query parameters:
+Send a GET request to `/api/opt` with the following query parameters:
 
-- `url` (required): Image URL to process
+- `rel` (optional): Relative path in your S3 bucket (will be prefixed with BUCKET_HOST)
+- `abs` (optional): Absolute image URL (http/https)
 - `w` (required): Width in pixels
 - `h` (optional): Height in pixels (if omitted, height is scaled automatically)
 - `c` (optional): Crop (`true` or `false`, default: `false`)
@@ -50,20 +51,27 @@ Send a GET request to `/api/res` with the following query parameters:
 ### Example Request
 
 ```
-curl "http://localhost:8080/api/res?url=https://example.com/image.jpg&w=300&h=200&c=true&f=webp" --output resized.webp
+curl "http://localhost:8080/api/opt?abs=https://example.com/image.jpg&w=300&h=200&c=true&f=webp" --output resized.webp
 ```
 
 - This fetches the image, resizes to 300x200, crops, and returns as WebP.
 
 ### Example: Only Width (auto height)
 ```
-curl "http://localhost:8080/api/res?url=https://example.com/image.jpg&w=400" --output resized.jpg
+curl "http://localhost:8080/api/opt?abs=https://example.com/image.jpg&w=400" --output resized.jpg
 ```
+
+### Example: Using a relative S3 path
+
+```
+curl "http://localhost:8080/api/opt?rel=media/image.jpg&w=400" --output s3-image.jpg
+```
+This will fetch the image from $BUCKET_HOST/media/image.jpg
 
 ### Example: Blur and Grayscale
 
 ```
-curl "http://localhost:8080/api/res?url=https://example.com/image.jpg&w=400&b=2.5&g=true" --output blurred-gray.jpg
+curl "http://localhost:8080/api/opt?abs=https://example.com/image.jpg&w=400&b=2.5&g=true" --output blurred-gray.jpg
 ```
 
 This fetches the image, resizes to 400px width, applies a blur with sigma 2.5, and converts it to grayscale.
