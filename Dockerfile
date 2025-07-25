@@ -3,8 +3,7 @@ FROM golang:1.21 as builder
 WORKDIR /app
 COPY . .
 RUN apt-get update && apt-get install -y pkg-config libvips-dev
-WORKDIR /app/api
-RUN go build -o /app/api/app .
+RUN go build -o /app/api/app ./api
 
 # Runtime stage
 FROM debian:bullseye-slim
