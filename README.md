@@ -29,7 +29,7 @@ Perfect for use in web apps, CMS, and image-heavy sites.
    ```
 2. **Clone the repo and run:**
    ```sh
-   git clone <your-repo-url>
+   git clone https://github.com/adewalegeorge/imagery.git
    cd imagery
    go run api/main.go
    # (Requires Go 1.24+)
